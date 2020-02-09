@@ -3,6 +3,15 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+*.swp
+*.*~
+project.lock.json
+.DS_Store
+*.pyc
+
+# Visual Studio Code
+.vscode
+
 # User-specific files
 *.rsuser
 *.suo
@@ -26,10 +35,14 @@ x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
+build/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+msbuild.log
+msbuild.err
+msbuild.wrn
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
