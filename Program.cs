@@ -1,160 +1,124 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
 namespace hashcode_2020
 {
-    public static class Algorithms {
-        public static List<KeyValuePair<int, int>> EndToStartWithMultiplesProbes(this int[] pizzas, int slicesLimit) {
+    public static class Algorithms
+    {
+        public static List<KeyValuePair<int, int>> OptimisticSolution(this int[] pizzas, int slicesLimit)
+        {
             var result = new List<KeyValuePair<int, int>>();
-            var watch = Stopwatch.StartNew();
-            for (var i = pizzas.Length -1; i >= 0 && watch.ElapsedMilliseconds < 10000; i--) {
-                var tempResult = new List<KeyValuePair<int, int>>();
+            for (var i = pizzas.Length - 1; i >= 0; i--)
+            {
                 var totalSlices = 0;
-                for(var j = i; pizzas.Length - j <= pizzas.Length && totalSlices < slicesLimit; j--) {
-                    var pos = j < 0 ? pizzas.Length + j : j;
-                    var pizza = pizzas[pos];
-                    if (pizza + totalSlices <= slicesLimit) {
-                        tempResult.Add(new KeyValuePair<int, int>(pos, pizza));
+                var tempResult = new List<KeyValuePair<int, int>>();
+                for (var j = i; j >= 0 && totalSlices < slicesLimit; j--)
+                {
+                    var pizza = pizzas[j];
+                    if (pizza + totalSlices <= slicesLimit)
+                    {
+                        tempResult.Add(new KeyValuePair<int, int>(j, pizza));
                         totalSlices += pizza;
                     }
                 }
-                if (tempResult.Score() > result.Score()) {
+                if (tempResult.Score() > result.Score())
+                {
                     result = tempResult.ToList();
                 }
-            }
-            watch.Stop();
-            return result;
-        }
-        public static List<KeyValuePair<int, int>> MiddleToStart(this int[] pizzas, int slicesLimit) {
-            var newPizzas = pizzas.Take((int)pizzas.Length/2).Reverse().Concat(pizzas.Skip((int)pizzas.Length/2).Reverse()).ToArray();
-            var totalSlices = 0;
-            var result = new List<KeyValuePair<int, int>>();
-            for (var i = 0; i < pizzas.Length && totalSlices < slicesLimit; i++) {
-                var pizza = newPizzas[i];
-                if (pizza <= slicesLimit-totalSlices) {
-                    if (i-(int)pizzas.Length/2 < 0) {
-                        result.Add(new KeyValuePair<int, int>((int)pizzas.Length/2 + i, pizza));
-                    } else {
-                        result.Add(new KeyValuePair<int, int>(i, pizza));
-                    }
-                    totalSlices += pizza;
+                if (totalSlices == slicesLimit)
+                {
+                    break;
                 }
+
             }
             return result;
         }
-        public static List<KeyValuePair<int, int>> MiddleToEnd(this int[] pizzas, int slicesLimit) {
-            var newPizzas = pizzas.Skip((int)pizzas.Length/2).Concat(pizzas.Take((int)pizzas.Length/2)).ToArray();
-            var totalSlices = 0;
-            var result = new List<KeyValuePair<int, int>>();
-            for (var i = 0; i < pizzas.Length && totalSlices < slicesLimit; i++) {
-                var pizza = newPizzas[i];
-                if (pizza <= slicesLimit-totalSlices) {
-                    if (i-(int)pizzas.Length/2 < 0) {
-                        result.Add(new KeyValuePair<int, int>((int)pizzas.Length/2 + i, pizza));
-                    } else {
-                        result.Add(new KeyValuePair<int, int>(i, pizza));
-                    }
-                    totalSlices += pizza;
-                }
-            }
-            return result;
-        }
-        public static List<KeyValuePair<int, int>> AlterningSidesStartFirst(this int[] pizzas, int slicesLimit) {
-            var i = 0;
-            var j = pizzas.Length -1;
-            var result = new List<KeyValuePair<int, int>>();
-            var totalSlices = 0;
-            do {
-                if (pizzas[i] + totalSlices <= slicesLimit) {
-                    result.Add(new KeyValuePair<int, int>(i, pizzas[i]));
-                    totalSlices += pizzas[i];
-                }
-                if (pizzas[j] + totalSlices <= slicesLimit) {
-                    result.Add(new KeyValuePair<int, int>(j, pizzas[j]));
-                    totalSlices += pizzas[j];
-                }
-                i++;
-                j--;
-            } while (i < j && totalSlices < slicesLimit);
-            return result;
-        }
-        public static List<KeyValuePair<int, int>> AlterningSidesEndFirst(this int[] pizzas, int slicesLimit) {
-            var i = 0;
-            var j = pizzas.Length -1;
-            var result = new List<KeyValuePair<int, int>>();
-            var totalSlices = 0;
-            do {
-                if (pizzas[j] + totalSlices <= slicesLimit) {
-                    result.Add(new KeyValuePair<int, int>(j, pizzas[j]));
-                    totalSlices += pizzas[j];
-                }
-                if (pizzas[i] + totalSlices <= slicesLimit) {
-                    result.Add(new KeyValuePair<int, int>(i, pizzas[i]));
-                    totalSlices += pizzas[i];
-                }
-                i++;
-                j--;
-            } while (i < j && totalSlices < slicesLimit);
-            return result;
-        }
-        public static List<KeyValuePair<int, int>> AlterningSidesSameTime(this int[] pizzas, int slicesLimit) {
-            var i = 0;
-            var j = pizzas.Length -1;
-            var result = new List<KeyValuePair<int, int>>();
-            var totalSlices = 0;
-            do {
-                if (pizzas[i] + pizzas[j] + totalSlices <= slicesLimit) {
-                    result.Add(new KeyValuePair<int, int>(i, pizzas[i]));
-                    result.Add(new KeyValuePair<int, int>(j, pizzas[j]));
-                    totalSlices += pizzas[i] + pizzas[j];
-                }
-                i++;
-                j--;
-            } while (i < j && totalSlices < slicesLimit);
-            return result;
-        }
-        public static List<KeyValuePair<int, int>> StartToEnd(this int[] pizzas, int slicesLimit) {
-            var totalSlices = 0;
-            var result = new List<KeyValuePair<int, int>>();
-            for (var i = 0; i < pizzas.Length && totalSlices < slicesLimit; i++) {
-                var pizza = pizzas[i];
-                if (pizza <= slicesLimit-totalSlices) {
-                    result.Add(new KeyValuePair<int, int>(i, pizza));
-                    totalSlices += pizza;
-                }
-            }
-            return result;
-        }
-        public static List<KeyValuePair<int, int>> EndToStart(this int[] pizzas, int slicesLimit) {
-            var totalSlices = 0;
-            var result = new List<KeyValuePair<int, int>>();
-            for (var i = pizzas.Length -1; i >= 0 && totalSlices < slicesLimit; i--) {
-                var pizza = pizzas[i];
-                if (pizza <= slicesLimit-totalSlices) {
-                    result.Add(new KeyValuePair<int, int>(i, pizza));
-                    totalSlices += pizza;
-                }
-            }
-            return result;
-        }
-        public static int Score(this List<KeyValuePair<int, int>> result) {
-            var total = 0;
-            result.ForEach(i => {
-                total += i.Value;
+        public static ulong Score(this List<KeyValuePair<int, int>> result)
+        {
+            ulong total = 0;
+            result.ForEach(i =>
+            {
+                total += (ulong)i.Value;
             });
             return total;
+        }
+        /// <summary>
+        /// Returns a random long from min (inclusive) to max (exclusive)
+        /// </summary>
+        /// <param name="random">The given random instance</param>
+        /// <param name="min">The inclusive minimum bound</param>
+        /// <param name="max">The exclusive maximum bound.  Must be greater than min</param>
+        public static long NextLong(this Random random, long min, long max)
+        {
+            if (max <= min)
+                throw new ArgumentOutOfRangeException("max", "max must be > min!");
+
+            //Working with ulong so that modulo works correctly with values > long.MaxValue
+            ulong uRange = (ulong)(max - min);
+
+            //Prevent a modolo bias; see https://stackoverflow.com/a/10984975/238419
+            //for more information.
+            //In the worst case, the expected number of calls is 2 (though usually it's
+            //much closer to 1) so this loop doesn't really hurt performance at all.
+            ulong ulongRand;
+            do
+            {
+                byte[] buf = new byte[8];
+                random.NextBytes(buf);
+                ulongRand = (ulong)BitConverter.ToInt64(buf, 0);
+            } while (ulongRand > ulong.MaxValue - ((ulong.MaxValue % uRange) + 1) % uRange);
+
+            return (long)(ulongRand % uRange) + min;
+        }
+
+        /// <summary>
+        /// Returns a random long from 0 (inclusive) to max (exclusive)
+        /// </summary>
+        /// <param name="random">The given random instance</param>
+        /// <param name="max">The exclusive maximum bound.  Must be greater than 0</param>
+        public static long NextLong(this Random random, long max)
+        {
+            return random.NextLong(0, max);
+        }
+
+        /// <summary>
+        /// Returns a random long over all possible values of long (except long.MaxValue, similar to
+        /// random.Next())
+        /// </summary>
+        /// <param name="random">The given random instance</param>
+        public static long NextLong(this Random random)
+        {
+            return random.NextLong(long.MinValue, long.MaxValue);
         }
     }
     class Program
     {
-        
+
         static void Main(string[] args)
         {
+            long M = new Random(DateTime.Now.Millisecond).Next((int)Math.Pow(10, 8), (int)Math.Pow(10, 9));
+            int N = new Random(DateTime.Now.Millisecond).Next((int)Math.Pow(10, 4), (int)Math.Pow(10, 5));
+            var S = new long[N];
+            var filename = $"{DateTime.UtcNow:yyyy-MM-dd_HH-mm-ss}.in";
+            S[0] =new Random(DateTime.Now.Millisecond).NextLong(0, (int)M%N);
+            var minValue = S[0];
+            for (int i = 1; i < N; i++) {
+                minValue = S[i-1];
+                long maxValue = new Random(DateTime.Now.Millisecond).NextLong(Math.Min(S[i-1]+50, M-6), Math.Min(S[i-1]+100, M-5));
+                var value = new Random(DateTime.Now.Millisecond).NextLong(minValue, maxValue);
+                S[i]=new Random(DateTime.Now.Millisecond).NextLong(minValue, maxValue);
+            }
+            String[] output2 = {
+                $"{M} {N}",
+                string.Join(" ", S)
+            };
+            File.WriteAllLines($"./input/{filename}", output2);
+
             var path = "./input/";
             DirectoryInfo d = new DirectoryInfo(path);
+            ulong totalPoints = 0;
             foreach (var file in d.GetFiles("*.in"))
             {
                 Console.WriteLine(file.Name);
@@ -162,29 +126,16 @@ namespace hashcode_2020
                 var slicesLimit = int.Parse(input.First().Split(" ").First());
                 var pizzas = input.Skip(1).Take(1).First().Split(" ").Select(i => int.Parse(i)).ToArray();
 
-                var results = new Dictionary<string, List<KeyValuePair<int, int>>>();
-                results.Add("Método 1", pizzas.EndToStart(slicesLimit));
-                results.Add("Método 2", pizzas.StartToEnd(slicesLimit));
-                results.Add("Método 3", pizzas.AlterningSidesSameTime(slicesLimit));
-                results.Add("Método 4", pizzas.AlterningSidesEndFirst(slicesLimit));
-                results.Add("Método 5", pizzas.AlterningSidesStartFirst(slicesLimit));
-                results.Add("Método 6", pizzas.MiddleToEnd(slicesLimit));
-                results.Add("Método 7", pizzas.MiddleToStart(slicesLimit));
-                results.Add("Método 8", pizzas.EndToStartWithMultiplesProbes(slicesLimit));
-
-                var ganador = results.OrderByDescending(i => i.Value.Score()).First();
-                Console.WriteLine($"Límite: {slicesLimit}");
-                Console.WriteLine($"Ganador {ganador.Key}, Puntuación: {ganador.Value.Score()}");
+                var results = pizzas.OptimisticSolution(slicesLimit);
+                totalPoints += results.Score();
+                Console.WriteLine($"Límite: {slicesLimit}, Puntuación: {results.Score()}");
                 String[] output = {
-                    $"{ganador.Value.Count}",
-                    string.Join(" ", ganador.Value.Select(i => i.Key).Reverse())
+                    $"{results.Count}",
+                    string.Join(" ", results.Select(i => i.Key).Reverse())
                 };
                 File.WriteAllLines("./output/" + file.Name, output);
             }
-            
-            // Console.WriteLine($"Pizzas:  {string.Join(" ", ganador.Value.Select(i => i.Key).Reverse())}");
-            // Console.WriteLine(result.Count);
-            // Console.WriteLine(string.Join(" ", result.Select(i => i.Key).Reverse()));
+            Console.WriteLine($"Total Puntos: {totalPoints}");
         }
     }
 }
